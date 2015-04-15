@@ -8,20 +8,24 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Deleting field 'EventTranslation.content'
+        db.delete_column(u'event_calendar_event_translation', 'content_id')
 
-        # Changing field 'Category.name'
-        db.alter_column(u'event_calendar_category', 'name', self.gf('django.db.models.fields.CharField')(max_length=512))
+        # Adding field 'Event.content'
+        db.add_column(u'event_calendar_event', 'content',
+                      self.gf('django.db.models.fields.related.ForeignKey')(related_name='event_content', null=True, to=orm['cms.Placeholder']),
+                      keep_default=False)
 
-        # Changing field 'Event.title'
-        db.alter_column(u'event_calendar_event', 'title', self.gf('django.db.models.fields.CharField')(max_length=512))
 
     def backwards(self, orm):
+        # Adding field 'EventTranslation.content'
+        db.add_column(u'event_calendar_event_translation', 'content',
+                      self.gf('django.db.models.fields.related.ForeignKey')(related_name='event_content', null=True, to=orm['cms.Placeholder']),
+                      keep_default=False)
 
-        # Changing field 'Category.name'
-        db.alter_column(u'event_calendar_category', 'name', self.gf('django.db.models.fields.CharField')(max_length=50))
+        # Deleting field 'Event.content'
+        db.delete_column(u'event_calendar_event', 'content_id')
 
-        # Changing field 'Event.title'
-        db.alter_column(u'event_calendar_event', 'title', self.gf('django.db.models.fields.CharField')(max_length=50))
 
     models = {
         u'auth.group': {
@@ -36,6 +40,22 @@ class Migration(SchemaMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+        },
+        u'auth.user': {
+            'Meta': {'object_name': 'User'},
+            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
+            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
         },
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
@@ -68,13 +88,14 @@ class Migration(SchemaMigration):
         'event_calendar.category': {
             'Meta': {'object_name': 'Category'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '512'})
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         'event_calendar.event': {
             'Meta': {'ordering': "['event_start']", 'object_name': 'Event'},
             'address': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['event_calendar.Category']"}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
+            'content': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'event_content'", 'null': 'True', 'to': "orm['cms.Placeholder']"}),
             'coordinates': ('geoposition.fields.GeopositionField', [], {'max_length': '42', 'null': 'True', 'blank': 'True'}),
             'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
             'description': ('django.db.models.fields.TextField', [], {}),
@@ -87,7 +108,7 @@ class Migration(SchemaMigration):
             'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
             'published': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'slug': ('django_autoslug.fields.AutoSlugField', [], {'max_length': '50', 'populate_from': "'title'", 'recursive': 'False', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '512'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'zip_code': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'})
         },
         u'event_calendar.eventlistplugin': {
@@ -95,6 +116,13 @@ class Migration(SchemaMigration):
             'category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['event_calendar.Category']", 'null': 'True', 'blank': 'True'}),
             u'cmsplugin_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['cms.CMSPlugin']", 'unique': 'True', 'primary_key': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+        },
+        'event_calendar.eventtranslation': {
+            'Meta': {'unique_together': "[(u'language_code', u'master')]", 'object_name': 'EventTranslation', 'db_table': "u'event_calendar_event_translation'"},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'language_code': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
+            u'master': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'translations'", 'null': 'True', 'to': "orm['event_calendar.Event']"}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
         u'filer.file': {
             'Meta': {'object_name': 'File'},
@@ -108,7 +136,7 @@ class Migration(SchemaMigration):
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'default': "u''", 'max_length': '255', 'blank': 'True'}),
             'original_filename': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'owned_files'", 'null': 'True', 'to': "orm['network.User']"}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'owned_files'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_filer.file_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             'sha1': ('django.db.models.fields.CharField', [], {'default': "u''", 'max_length': '40', 'blank': 'True'}),
             'uploaded_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'})
@@ -121,7 +149,7 @@ class Migration(SchemaMigration):
             u'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'filer_owned_folders'", 'null': 'True', 'to': "orm['network.User']"}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'filer_owned_folders'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'children'", 'null': 'True', 'to': u"orm['filer.Folder']"}),
             u'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             u'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -139,21 +167,6 @@ class Migration(SchemaMigration):
             'must_always_publish_author_credit': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'must_always_publish_copyright': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'subject_location': ('django.db.models.fields.CharField', [], {'default': 'None', 'max_length': '64', 'null': 'True', 'blank': 'True'})
-        },
-        'network.user': {
-            'Meta': {'ordering': "[u'email']", 'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '255', 'db_index': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'legacy_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'migrated': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"})
         }
     }
 

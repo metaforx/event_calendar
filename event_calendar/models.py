@@ -8,10 +8,17 @@ from model_utils.models import TimeStampedModel
 from django_autoslug.fields import AutoSlugField
 from base.models import TimestampedModel
 from geoposition.fields import GeopositionField
-from base.fields.extra import MarkdownTextField
+
+
+from cms.models import PlaceholderField, CMSPlugin
+from parler.models import TranslatableModel, TranslatedFields
+from parler.managers import TranslationManager
+
+
+
 
 class Category(models.Model):
-    name = models.CharField(_('Name'), max_length=512)
+    name = models.CharField(_('Name'), max_length=50)
 
     def __unicode__(self):
         return self.name
@@ -21,7 +28,7 @@ class Category(models.Model):
         app_label = 'event_calendar'
 
 
-class EventManager(models.Manager):
+class EventManager(TranslationManager):
 
     def published(self):
         return self.get_query_set().filter(published=True)
@@ -38,12 +45,22 @@ class EventManager(models.Manager):
             event_end__gte=datetime.datetime.utcnow()
         )
 
-class Event(TimeStampedModel):
-    title = models.CharField(_('Title'), max_length=512)
+
+
+class Event(TimeStampedModel, TranslatableModel):
+    title = models.CharField(_('Title'), max_length=50)
     slug = AutoSlugField(populate_from='title', editable=False, blank=True, overwrite=True)
     published = models.BooleanField(default=True)
     #description = MarkdownTextField(blank=True, null=True)
     description = models.TextField(_('Description'))
+    content = PlaceholderField('event_content', related_name='event_content')
+
+    translations = TranslatedFields(
+        name = models.CharField(_("name"), max_length=200)
+    )
+
+
+
     event_start = models.DateTimeField(_('Start time'), blank=False)
     event_end = models.DateTimeField(_('End time'), blank=True, null=True)
     location = models.CharField(_('Location'), max_length=50, blank=True)
@@ -67,6 +84,8 @@ class Event(TimeStampedModel):
         ordering = ['event_start']
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
+
+
 
     @models.permalink
     def get_absolute_url(self):
