@@ -1,0 +1,27 @@
+{% extends "cms_base.html" %}
+
+{% load i18n cms_tags %}
+
+{% block cms_content %}
+    {% placeholder "content" or %}{% endplaceholder %}
+    <div class="row event-list-container">
+        <div class="small-12 columns">
+            <h1>{% trans "Event Calendar" %}</h1>
+            <ul class="event-list no-bullet">
+                {% for object in object_list %}
+                    <li>
+                        <h3>{{ object.event_start|date:"j. F Y" }} {% if object.event_end %} - {{ object.event_end|date:"j. F Y" }}{% endif %} </h3>
+                        <h3><a href="{{ object.get_absolute_url }}">{{ object.title }}  <i class="fa fa-angle-right"></i></a></h3>
+                        {% if object.event_end %}
+                            <p>{{ object.event_start|date:"l, j. F" }} - {{ object.event_end|date:"l, j. F Y" }}</p>
+                        {% else %}
+                            <p>{{ object.event_start|date:"l, j. F Y" }}, {{ object.event_start|date:"G:i" }}</p>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li>{% trans "No upcoming events" %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

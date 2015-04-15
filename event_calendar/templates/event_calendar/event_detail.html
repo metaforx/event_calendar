@@ -1,0 +1,122 @@
+{% extends "cms_base.html" %}
+
+{% load i18n cms_tags thumbnail sekizai_tags %}
+
+{% block cms_content %}
+
+    {% if object.published %}
+
+        <div class="row event-container">
+
+
+            <div class="small-12 medium-8 columns event end">
+                <h1>{{ object.title }}</h1>
+
+                <div class="row">
+                    <div class="small-12 medium-6 columns">
+                        <h3>{{ object.event_start|date:"l, j. F Y" }}, {{ object.event_start|date:"G:i" }}</h3>
+                    </div>
+                    <div class="small-12 medium-6 columns">
+                        <a href="{{ request.build_absolute_uri  }}"  title="Add to Calendar" class="addthisevent">
+                            <i class="fa fa-star show-for-small-only"></i>
+                            <span>{% trans "Add to Calendar" %}</span>
+                            <i class="fa fa-star hide-for-small-only"></i>
+                            <span class="_start">{{ object.event_start|date:"d-m-Y G:i:00" }}</span>
+                            <span class="_end">{{ object.event_start|date:"d-m-Y G:i:00" }}</span>
+                            <span class="_zonecode">41</span>
+                            <span class="_summary">ewz.selection - {{ object.title|safe }}</span>
+                            <span class="_description">{{ object.description|safe|truncatechars:1024 }}</span>
+                            <span class="_location">{{ object.location|safe }}</span>
+                            <span class="_organizer">ewz.selection</span>
+                            <span class="_organizer_email">info@ewzselection.ch</span>
+                            {% if object.facebook_url %}<span class="_facebook_event">{{ object.facebook_url }}</span>{% endif %}
+                            <span class="_all_day_event">false</span>
+                            <span class="_date_format">DD/MM/YYYY</span>
+                        </a>
+                    </div>
+                </div>
+
+
+            </div>
+
+
+            <div class="small-12 medium-8 columns event">
+                {% if object.image %}
+                    {% with object.image.image as image %}
+
+                        <img class="event-teaser" src="{% thumbnail image 900x540 upscale crop quality=90 %}"
+                             alt="event - {{ object.title }}">
+
+
+                    {% endwith %}
+                {% endif %}
+
+                {% if object.description %}
+                    <p>
+                        {{ object.description }}
+                    </p>
+                {% endif %}
+            </div>
+
+
+            <div class="small-12 medium-4 event columns">
+
+                {% if object.coordinates %}
+                    {% include "event_calendar/map/inline.html" %}
+                    {% if object.location %}
+                        <a class="open-google-map" target="_blank" href="http://www.google.com/maps/place/{{ object.google_location }}/@{{ object.google_lat }},{{ object.google_long }},17z">{% trans "Show on Google Maps" %}</a>
+                    {% else %}
+                        <a class="open-google-map" target="_blank" href="http://www.google.com/maps/place/{{ object.google_location }},{{ object.google_long }}/@{{ object.google_lat }},{{ object.google_long }},17z">{% trans "Show on Google Maps" %}</a>
+                    {% endif %}
+
+                {% endif %}
+
+                {% if object.location %}
+                    <h3>{{ object.location }}</h3>
+                {% endif %}
+
+                <p>
+                    {% if object.address %}
+                        {{ object.address }}<br/>
+                    {% endif %}
+                    {% if object.address %}{{ object.zip_code }}{% endif %}
+                    {% if object.city %}{{ object.city }}{% endif %}</p>
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+    {% else %}
+        <div class="row">
+            <div class="small-12 columns">
+                <h1>{% trans "No event information available. " %}</h1>
+            </div>
+        </div>
+    {% endif %}
+
+
+    {% addtoblock "js-post" %}
+
+        <!-- AddThisEvent -->
+        <script type="text/javascript" src="https://addthisevent.com/libs/ate-latest.min.js"></script>
+
+        <!-- AddThisEvent Settings -->
+        <script type="text/javascript">
+            addthisevent.settings({
+                mouse: false,
+                css: false,
+                google: {show: true, text: "Google Calendar"},
+                ical: {show: true, text: "iCal Calendar"},
+                outlook: {show: true, text: "Outlook Calendar"},
+                yahoo: {show: true, text: "Yahoo Calendar"},
+                hotmail: {show: true, text: "Hotmail Calendar"},
+                facebook: {show: true, text: "Facebook Calendar"}
+            });
+        </script>
+    {% endaddtoblock %}
+
+{% endblock %}
+
